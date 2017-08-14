@@ -96,6 +96,7 @@ public class ExecutorDelivery implements ResponseDelivery {
 
             // Deliver a normal response or error, depending.
             if (mResponse.isSuccess()) {
+                //请求成功，接口回调
                 mRequest.deliverResponse(mResponse.result);
             } else {
                 mRequest.deliverError(mResponse.error);
@@ -111,6 +112,7 @@ public class ExecutorDelivery implements ResponseDelivery {
 
             // If we have been provided a post-delivery runnable, run it.
             if (mRunnable != null) {
+                //这里当请求成功后，执行一个异步线程，对应情况：需要刷新缓存，先将缓存返回成response后，再异步请求，刷新缓存。
                 mRunnable.run();
             }
        }

@@ -40,6 +40,7 @@ public class Volley {
      * @return A started {@link RequestQueue} instance.
      */
     public static RequestQueue newRequestQueue(Context context, HttpStack stack) {
+        //建立缓存
         File cacheDir = new File(context.getCacheDir(), DEFAULT_CACHE_DIR);
 
         String userAgent = "volley/0";
@@ -50,18 +51,29 @@ public class Volley {
         } catch (NameNotFoundException e) {
         }
 
+        /**
+         * 策略模式
+         */
         if (stack == null) {
             if (Build.VERSION.SDK_INT >= 9) {
+                //大于2.3则建立HurlStack
                 stack = new HurlStack();
             } else {
                 // Prior to Gingerbread, HttpUrlConnection was unreliable.
                 // See: http://android-developers.blogspot.com/2011/09/androids-http-clients.html
+                //小于2.3版本则建立HttpClientStack
                 stack = new HttpClientStack(AndroidHttpClient.newInstance(userAgent));
             }
         }
 
+        /**
+         * 创建一个网络请求
+         */
         Network network = new BasicNetwork(stack);
 
+        /**
+         * 这里每次都会创建一个请求队列，可以优化，只创建一个全局队列吗
+         */
         RequestQueue queue = new RequestQueue(new DiskBasedCache(cacheDir), network);
         queue.start();
 

@@ -83,10 +83,12 @@ public class NetworkDispatcher extends Thread {
     public void run() {
         Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
         while (true) {
+            //记录开始时间
             long startTimeMs = SystemClock.elapsedRealtime();
             Request<?> request;
             try {
                 // Take a request from the queue.
+                //从队首拿一个请求
                 request = mQueue.take();
             } catch (InterruptedException e) {
                 // We may have been interrupted because it was time to quit.
@@ -101,19 +103,22 @@ public class NetworkDispatcher extends Thread {
 
                 // If the request was cancelled already, do not perform the
                 // network request.
+                //如果被取消则结束当前这次循环
                 if (request.isCanceled()) {
                     request.finish("network-discard-cancelled");
                     continue;
                 }
-
+                //添加流量统计标签
                 addTrafficStatsTag(request);
 
                 // Perform the network request.
+                //此处执行网络请求
                 NetworkResponse networkResponse = mNetwork.performRequest(request);
                 request.addMarker("network-http-complete");
 
                 // If the server returned 304 AND we delivered a response already,
                 // we're done -- don't deliver a second identical response.
+                //如果服务器返回的304或者request已经存在response
                 if (networkResponse.notModified && request.hasHadResponseDelivered()) {
                     request.finish("not-modified");
                     continue;
@@ -131,6 +136,7 @@ public class NetworkDispatcher extends Thread {
                 }
 
                 // Post the response back.
+                //设置request已经返回response
                 request.markDelivered();
                 mDelivery.postResponse(request, response);
             } catch (VolleyError volleyError) {
